@@ -1,0 +1,99 @@
+#XLC Communication Services
+META
+GOOGL
+NFLX
+TTWO
+
+#XLC Consumer Discretionary
+AMZN
+TSLA
+HD
+
+#XLY Consumer Staples
+WMT
+COST
+
+#XLE Financials   
+BRK.B
+JPM
+V
+MA
+BAC
+#XLP Energy
+XOM
+CVX
+COP
+WMB
+MPC
+#XLV Industrials
+CAT
+GE
+GEV
+
+#XLF Health Care
+LLY
+JNJ
+ABBV
+UNH
+MRK
+
+#XLI Information Technology
+NVDA
+APPL
+MSFT
+AVGO
+
+#Software
+ADBE
+
+MU
+QQQ
+SQQQ
+MNQU26
+SPY
+SOXL
+SOXX
+SOXS
+AMD
+QCOM
+INTC
+SNDK
+MRVL
+ORCL
+
+ARM
+WDC
+STX
+DELL
+IBM
+PLTR
+APPL
+CRM
+CRWD
+PANW
+NOW
+INTU
+SPCX
+CRCL
+
+
+TSM
+
+
+#SMH - VanEck半导体ETF（1倍半导体行业核心）
+#GLD - SPDR黄金ETF（追踪现货黄金走势）
+#XLF - 金融服务行业精选SPDR基金         
+#TQQQ - 三倍做多纳斯达克100 ETF（与SOXL类似的超级波动杠杆品种）
+#IBIT - 贝莱德 iShares 比特币信托 ETF（加密资产核心标的）
+#XLE - 能源行业精选SPDR基金
+#EEM - iShares安硕MSCI新兴市场ETF
+#DRAM - 专注于内存与存储半导体的行业ETF
+
+SMH
+GLD
+XLF
+TQQQ
+IBIT
+XLE
+EEM
+DRAM
