@@ -84,21 +84,24 @@ class MinSlidingValue(SlidingValue, ABC):
     """
     makes sure smallest value goes first
     """
-    def _compare(self, class_value, val):
+    @staticmethod
+    def _compare(class_value, val):
         """
         smallest has priority
         """
-        return val <= self._next_val
+        return val <= class_value
 
 class MaxSlidingValue(SlidingValue, ABC):
     """
     makes sure biggest value goes first
     """
-    def _compare(self, class_value, val):
+
+    @staticmethod
+    def _compare(class_value, val):
         """
         biggest has priority
         """
-        return val >= self._next_val
+        return val >= class_value
 
 
 
