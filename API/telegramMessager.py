@@ -21,5 +21,3 @@ def send_telegram(string : str):
 
     if not response.json()["ok"]:
         print(response.json()["description"])
-
-send_telegram("test")

@@ -7,7 +7,7 @@ from API.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
 from API.telegramMessager import send_telegram
 from Engine.SlidingValue import SlidingValue, MaxSlidingValue, MinSlidingValue
 
-BASE_THRESHOLD_IV = 60
+BASE_THRESHOLD_IV = .9
 
 
 class IVNotInterpolatedError(Exception):
@@ -27,18 +27,18 @@ class StockMonitor:
         min_iv = symbols : priority_queue, the top being the smallest IV of stock [key] in the last 24 hours
         max_iv symbols : priority_queue, the top being the largest IV stock [key] in the last 24 hours
         """
-        self.symbols_list = load_symbols(Path("../blob/optionSymbols.txt"))
+        self.symbols_list = load_symbols(Path("blob/optionSymbols.txt"))
         self.min_iv : dict[str, SlidingValue] = {} #SlidingValue.get_value() returns a float
         self.max_iv : dict[str, SlidingValue] = {}
         self.iv_finder = SchwabIV()
         # database connector here
         #
-
+        print(self.symbols_list)
     def check_IV_range(self, symbol):
         """
         if IV exceeds a certain range during the day, alert
         """
-        if self.min_iv[symbol] and self.max_iv[symbol] and self.max_iv[symbol].get_val - self.min_iv[symbol].get_val > 20:
+        if self.min_iv[symbol].val and self.max_iv[symbol].val and self.max_iv[symbol].get_iv - self.min_iv[symbol].get_iv > 20:
             send_telegram(str(symbol) + "abnormal change in IV")
 
 
@@ -49,7 +49,8 @@ class StockMonitor:
         TODO: make it adjustable for each individual stock
         """
         if iv_result.iv > BASE_THRESHOLD_IV:
-            send_telegram(str(CompositeIVResult.symbol) + "exceeds base threshold of " + str(BASE_THRESHOLD_IV) + " at " + str(CompositeIVResult.iv))
+            #print("------------")
+            send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(BASE_THRESHOLD_IV) + " at " + str(round(iv_result.iv, 2)))
 
     def monitor(self):
         """
@@ -64,19 +65,23 @@ class StockMonitor:
         for symbol in self.symbols_list:
             try:
                 composite_iv_result = self.iv_finder.fetch_composite_iv(symbol)
-                if composite_iv_result.status is not "interpolated":
+                print(str(composite_iv_result.symbol) + " " + str(composite_iv_result.iv))
+                if composite_iv_result.status !="interpolated":
                     raise IVNotInterpolatedError(str(symbol) + " could not be interpolated")
-                iv = composite_iv_result.iv
 
-
+                #check base threshold
+                self.check_IV_threshold(composite_iv_result)
 
                 if not self.max_iv.get(symbol):
-                    self.max_iv[symbol] = None
+                    self.max_iv[symbol] = MaxSlidingValue()
                 if not self.min_iv.get(symbol):
-                    self.min_iv[symbol] = None
+                    self.min_iv[symbol] = MinSlidingValue()
 
+                #check IV range
                 self.check_IV_range(symbol)
 
+
+                iv = composite_iv_result.iv
                 self.max_iv[symbol].update_value(iv)
                 self.min_iv[symbol].update_value(iv)
 
@@ -84,5 +89,5 @@ class StockMonitor:
 
             except IVNotInterpolatedError as e:
                 print(e.message)
-            except Exception:
-                print("something happened for " + symbol)
+            #except Exception as e:
+             #   print("something happened for " + symbol + '\n' + str(e))

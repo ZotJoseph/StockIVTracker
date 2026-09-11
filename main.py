@@ -1,5 +1,5 @@
 # This is a sample Python script.
-from asyncio import sleep
+from time import sleep
 from datetime import datetime, timedelta
 from API import compositeIVFinder
 from API.compositeIVFinder import load_symbols
