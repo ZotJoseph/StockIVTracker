@@ -3,9 +3,11 @@ Core engine of the stock monitor
 keeps track of all stock variables across multiple cron instances
 """
 from pathlib import Path
-from API.compositeIVFinder import load_symbols, SchwabIV
+from API.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
 from API.telegramMessager import send_telegram
 from Engine.SlidingValue import SlidingValue, MaxSlidingValue, MinSlidingValue
+
+BASE_THRESHOLD_IV = 60
 
 
 class IVNotInterpolatedError(Exception):
@@ -33,8 +35,21 @@ class StockMonitor:
         #
 
     def check_IV_range(self, symbol):
-        if self.min_iv[symbol] and self.max_iv[symbol] and self.max_iv[symbol].get_val - self.min_iv[symbol].get_val > 10:
+        """
+        if IV exceeds a certain range during the day, alert
+        """
+        if self.min_iv[symbol] and self.max_iv[symbol] and self.max_iv[symbol].get_val - self.min_iv[symbol].get_val > 20:
             send_telegram(str(symbol) + "abnormal change in IV")
+
+
+    @staticmethod
+    def check_IV_threshold(iv_result : CompositeIVResult):
+        """
+        if IV exceeds a certain base threshold during the day, alert
+        TODO: make it adjustable for each individual stock
+        """
+        if iv_result.iv > BASE_THRESHOLD_IV:
+            send_telegram(str(CompositeIVResult.symbol) + "exceeds base threshold of " + str(BASE_THRESHOLD_IV) + " at " + str(CompositeIVResult.iv))
 
     def monitor(self):
         """
@@ -56,9 +71,9 @@ class StockMonitor:
 
 
                 if not self.max_iv.get(symbol):
-                    self.max_iv[symbol] = MaxSlidingValue(60)
+                    self.max_iv[symbol] = None
                 if not self.min_iv.get(symbol):
-                    self.min_iv[symbol] = MinSlidingValue(40)
+                    self.min_iv[symbol] = None
 
                 self.check_IV_range(symbol)
 

@@ -27,8 +27,9 @@ class SlidingValue(ABC):
     def get_val(self):
         return self._val.val
 
+    @staticmethod
     @abstractmethod
-    def _compare(self, class_value, val) -> bool:
+    def _compare(class_value, val) -> bool:
         """
         child class decides how to implement compare (bigger or smaller)
         """
