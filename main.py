@@ -1,16 +1,30 @@
 # This is a sample Python script.
+from asyncio import sleep
+from datetime import datetime, timedelta
+from API import compositeIVFinder
+from API.compositeIVFinder import load_symbols
+
 
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+from Engine.stock_monitor import StockMonitor
 
 
-# Press the green button in the gutter to run the script.
+monitor = StockMonitor()
+
+def start_monitoring():
+
+    next_update = datetime.now()
+
+    while True:
+        now = datetime.now()
+        if now >= next_update:
+            print("process ran at " + str(now))
+            next_update = now + timedelta(minutes = 15)
+            monitor.monitor()
+        sleep(60)
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
+    start_monitoring()
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

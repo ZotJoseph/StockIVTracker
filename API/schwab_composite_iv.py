@@ -131,7 +131,10 @@ def parse_dte(expiry_key: str, contracts: Iterable[dict[str, Any]]) -> int | Non
 
 
 def valid_contract_iv(contract: dict[str, Any]) -> float | None:
-    """Return Schwab IV as a decimal. Schwab chain 'volatility' is percent."""
+    """
+    The thing that actually returns the stock IV
+    Return Schwab IV as a decimal. Schwab chain 'volatility' is percent.
+    """
     iv_pct = as_finite_float(contract.get("volatility"))
     if iv_pct is None or iv_pct <= 0.0 or iv_pct > 1000.0:
         return None
@@ -252,6 +255,13 @@ def constant_maturity_iv(expiries: list[ExpiryIV], target_dte: int) -> tuple[flo
 
 
 def fetch_composite_iv(client: Client, symbol: str) -> CompositeIVResult:
+    """
+    THIS FUNCTION RETURNS THE ACTUAL RESULT + EVERYTHING YOU NEED
+
+    :param client: the dataclass used to store API related information
+    :param symbol: the stock symbol you want to pass in
+    :return: The CompositeIV as a dataclass
+    """
     market_date = datetime.now(ZoneInfo("America/New_York")).date()
     from_date = market_date + timedelta(days=MIN_DTE)
     to_date = market_date + timedelta(days=MAX_DTE)
