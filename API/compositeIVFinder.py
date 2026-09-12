@@ -66,6 +66,7 @@ class ExpiryIV:
 class CompositeIVResult:
     symbol: str
     underlying_price: float
+    datetime : datetime
     iv: float | None  # decimal
     lower_dte: int | None
     upper_dte: int | None
@@ -310,6 +311,7 @@ def fetch_composite_iv(client: Client, symbol: str) -> CompositeIVResult:
     return CompositeIVResult(
         symbol = symbol,
         underlying_price = spot,
+        datetime = datetime.now(),
         iv = iv,
         lower_dte = lower_dte,
         upper_dte = upper_dte,
