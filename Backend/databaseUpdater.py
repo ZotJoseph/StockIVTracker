@@ -12,14 +12,16 @@ handles updating the database
 """
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
 
 from API.compositeIVFinder import CompositeIVResult
 
+DATABASE_NAME = "stocks.db"
 
-class databaseUpdater:
+class DatabaseUpdater:
     def __init__(self):
-        self.connection = sqlite3.connect("stocks.db")
+        self.connection = sqlite3.connect(Path(DATABASE_NAME))
         self.connection.execute('PRAGMA foreign_keys = ON;')
 
     def makeDatabase(self):
@@ -32,14 +34,14 @@ class databaseUpdater:
         TODO: make a separate script that deletes old daily
         """
         cursor = self.connection.execute("""
-                                         CREATE TABLE stocks
+                                         CREATE TABLE IF NOT EXISTS stocks
                                          (
                                              stock_symbol TEXT PRIMARY KEY NOT NULL
                                          ) STRICT;
                                          """)
 
         cursor.execute("""
-                       CREATE TABLE intraday
+                       CREATE TABLE IF NOT EXISTS intraday
                        (
                            stock_symbol  TEXT,
                            iv_date  TEXT,
@@ -51,7 +53,7 @@ class databaseUpdater:
                        """)
 
         cursor.execute("""
-                       CREATE TABLE daily
+                       CREATE TABLE IF NOT EXISTS daily
                        (
                            stock_symbol  TEXT,
                            iv_date  TEXT,
@@ -64,9 +66,21 @@ class databaseUpdater:
 
         cursor.close()
 
+    def insertStock(self, composite_iv_result: CompositeIVResult):
+        """
+        insert stock symbol into stock table for the first time
+        """
+        stock_symbol = composite_iv_result.symbol
+        cursor = self.connection.execute("""
+        INSERT INTO stocks (stock_symbol)
+            VALUES (:stock_symbol)
+            ON CONFLICT (stock_symbol) DO NOTHING
+        """, {'stock_symbol' : stock_symbol})
+        cursor.close()
+
     def insertDaily(self, composite_iv_result: CompositeIVResult):
         """
-        inserts data from the composite_iv_result onto the daily database
+        inserts data from the composite_iv_result onto the daily table
         """
         stock_symbol = composite_iv_result.symbol
         compositeIV30 = composite_iv_result.iv
@@ -83,7 +97,7 @@ class databaseUpdater:
 
     def insertIntraday(self, composite_iv_result: CompositeIVResult):
         """
-        inserts data from composite_iv_result onto the intraday databasex
+        inserts data from composite_iv_result onto the intraday table
 
         """
         stock_symbol = composite_iv_result.symbol
@@ -92,8 +106,8 @@ class databaseUpdater:
 
         cursor = self.connection.execute("""
                                          INSERT INTO intraday (stock_symbol, iv_date, compositeIV30)
-                                         VALUES (:stock_symbol, :date, :compositIV30)
-                                         ON CONFLICT(stock_symbol, date)
+                                         VALUES (:stock_symbol, :date, :compositeIV30)
+                                         ON CONFLICT(stock_symbol, iv_date)
                                          DO UPDATE SET compositeIV30 = excluded.compositeIV30;""",
                                          {'stock_symbol': stock_symbol, 'date': date,
                                           'compositeIV30': compositeIV30}
@@ -102,13 +116,28 @@ class databaseUpdater:
 
 
     def getLatestIVFromStock(self, stock_symbol : str):
+        """
+        returns an iv of the stock that is no later than one week
+        if it is/no iv exist, return None
+        """
         cursor = self.connection.execute("""
             SELECT (compositeIV30, iv_date)
             FROM intraday
             WHERE stock_symbol = :stock_symbol
-            ORDER BY date DESC;
+            ORDER BY date DESC
+            LIMIT 1;
         """, {'stock_symbol' : stock_symbol})
 
+        potential_iv_time = cursor.fetchone()
+        if not potential_iv_time or potential_iv_time[1] < datetime.now() - timedelta(weeks = 1):
+            return None
+
+        return potential_iv_time
+
+    def update_stock(self, compositeIVResult : CompositeIVResult):
+        self.insertStock(compositeIVResult)
+        self.insertDaily(compositeIVResult)
+        self.insertIntraday(compositeIVResult)
 
 
-x = databaseUpdater()
+x = DatabaseUpdater()

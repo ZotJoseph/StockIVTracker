@@ -64,14 +64,14 @@ class ExpiryIV:
 
 @dataclass
 class CompositeIVResult:
-    symbol: str
-    underlying_price: float
-    datetime : datetime
-    iv: float | None  # decimal
-    lower_dte: int | None
-    upper_dte: int | None
-    contracts_used: int
-    status: str
+    symbol: str = None
+    underlying_price: float = None
+    datetime : datetime = None
+    iv: float | None  = None # decimal
+    lower_dte: int | None = None
+    upper_dte: int | None = None
+    contracts_used: int = None
+    status: str = None
 
 
 def load_symbols(path: Path) -> list[str]:

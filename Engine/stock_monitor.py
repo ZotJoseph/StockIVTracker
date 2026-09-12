@@ -5,10 +5,9 @@ keeps track of all stock variables across multiple cron instances
 from pathlib import Path
 from API.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
 from API.telegramMessager import send_telegram
-from Engine.SlidingValue import SlidingValue, MaxSlidingValue, MinSlidingValue
 
-BASE_THRESHOLD_IV = .9
-
+BASE_IV_THRESHOLD = .9
+BASE_RANGE_THRESHOLD = 0.05
 
 class IVNotInterpolatedError(Exception):
     def __init__(self, message, error_code = None):
@@ -28,15 +27,18 @@ class StockMonitor:
         max_iv symbols : priority_queue, the top being the largest IV stock [key] in the last 24 hours
         """
         self.symbols_list = load_symbols(Path("blob/optionSymbols.txt"))
-        self.min_iv : dict[str, SlidingValue] = {} #SlidingValue.get_value() returns a float
-        self.max_iv : dict[str, SlidingValue] = {}
+        self.min_iv : dict[str, int] = {} #SlidingValue.get_value() returns a float
+        self.max_iv : dict[str, int] = {}
         self.iv_finder = SchwabIV()
         # database connector here
         #
         print(self.symbols_list)
+
+
+
     def check_IV_range(self, symbol):
         """
-        if IV exceeds a certain range during the day, alert
+        if IV's range exceeds a certain percent, alert
         """
         if self.min_iv[symbol].val and self.max_iv[symbol].val and self.max_iv[symbol].get_iv - self.min_iv[symbol].get_iv > 20:
             send_telegram(str(symbol) + "abnormal change in IV")
@@ -48,9 +50,9 @@ class StockMonitor:
         if IV exceeds a certain base threshold during the day, alert
         TODO: make it adjustable for each individual stock
         """
-        if iv_result.iv > BASE_THRESHOLD_IV:
+        if iv_result.iv > BASE_IV_THRESHOLD:
             #print("------------")
-            send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(BASE_THRESHOLD_IV) + " at " + str(round(iv_result.iv, 2)))
+            send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(BASE_IV_THRESHOLD) + " at " + str(round(iv_result.iv, 2)))
 
     def monitor(self):
         """
