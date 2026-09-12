@@ -1,2 +1,4 @@
 /.env
 /tokens.json
+/test_stocks.db
+/Backend/stocks.db
