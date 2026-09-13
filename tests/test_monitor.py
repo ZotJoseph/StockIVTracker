@@ -2,16 +2,16 @@ import unittest
 from datetime import timedelta, datetime
 from typing import Any, Generator
 
-import Engine
-from Engine.StockIVMonitor import StockMonitor
+import engine
+from engine.stockIVMonitor import StockMonitor
 from services.compositeIVFinder import SchwabIV, CompositeIVResult
 from tests.test_database import wipe_db, make_fresh_db
 from unittest.mock import MagicMock
-import Engine.StockIVMonitor
+import engine.stockIVMonitor
 
 
-Engine.databaseUpdater.DATABASE_NAME = "test_stocks.db"
-Engine.stock_monitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
+engine.database.DATABASE_NAME = "test_stocks.db"
+engine.stockIVMonitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
 
 
 def patch_fetch_composite_iv(mocker, iv_list: list[float]):
@@ -45,7 +45,7 @@ def patch_send_to_telegram(mocker) -> unittest.mock.MagicMock:
 
     #need to patch stock_monitor's reference of the function
     #stock_monitor has its own reference because it imported via "from ... import" instead of "import"
-    return mocker.patch("Engine.stock_monitor.send_telegram")
+    return mocker.patch("engine.stockIVMonitor.send_telegram")
 
 
 

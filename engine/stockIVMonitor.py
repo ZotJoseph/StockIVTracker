@@ -5,7 +5,7 @@ keeps track of all stock variables across multiple cron instances
 from pathlib import Path
 from services.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
 from services.telegramMessanger import send_telegram
-from Engine.database import DatabaseUpdater
+from engine.database import DatabaseUpdater
 
 #TODO: each stock gets its OWN thresholds
 BASE_IV_THRESHOLD = .9  #When Composite IV exceeds value, alert (.9 = 90%)
