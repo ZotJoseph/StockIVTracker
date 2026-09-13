@@ -5,11 +5,20 @@ keeps track of all stock variables across multiple cron instances
 from pathlib import Path
 from API.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
 from API.telegramMessager import send_telegram
+from Engine.databaseUpdater import DatabaseUpdater
+
 
 BASE_IV_THRESHOLD = .9
 BASE_RANGE_THRESHOLD = 0.05
+OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
+OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
+
 
 class IVNotInterpolatedError(Exception):
+    """
+    custom error for when API or IVCalculator could not interpolate IV
+    usually when stock symbol does not exist
+    """
     def __init__(self, message, error_code = None):
         super().__init__(message)
         self.error_code = error_code
@@ -26,22 +35,44 @@ class StockMonitor:
         min_iv = symbols : priority_queue, the top being the smallest IV of stock [key] in the last 24 hours
         max_iv symbols : priority_queue, the top being the largest IV stock [key] in the last 24 hours
         """
-        self.symbols_list = load_symbols(Path("blob/optionSymbols.txt"))
-        self.min_iv : dict[str, int] = {} #SlidingValue.get_value() returns a float
-        self.max_iv : dict[str, int] = {}
+        self.symbols_list = load_symbols(Path(OPTION_SYMBOLS_PATH))
+        self.min_iv : dict[str, float] = {} #SlidingValue.get_value() returns a float
+        self.max_iv : dict[str, float] = {}
+
         self.iv_finder = SchwabIV()
-        # database connector here
-        #
-        print(self.symbols_list)
+
+        self.database = DatabaseUpdater()
+        self.database.makeDatabase()
+
+        for stock in self.symbols_list:
+            self.initialize_iv_range(stock)
 
 
+    def initialize_iv_range(self, stock_symbol : str):
+        """
+        given a stock symbol, grab the latest IV value from database, if it does not exist, set both to None
+        TODO: if data for today's stock exist, retrieve the smallest and largest value 30 day composite IV and set them to min/max respectively
+        """
+        stock_iv = self.database.getLatestIVFromStock(stock_symbol)
+        self.min_iv[stock_symbol], self.max_iv[stock_symbol] = stock_iv, stock_iv
+
+
+    def update_IV_range(self, composite_iv_result : CompositeIVResult):
+        """
+        given compositeIVResult, update existing IV range
+        """
+        symbol = composite_iv_result.symbol
+        if not self.min_iv.get(symbol) or self.min_iv[symbol] > composite_iv_result.iv:
+            self.min_iv[symbol] = composite_iv_result.iv
+        if not self.max_iv.get(symbol) or self.max_iv[symbol] < composite_iv_result.iv:
+            self.max_iv[symbol] = composite_iv_result.iv
 
     def check_IV_range(self, symbol):
         """
         if IV's range exceeds a certain percent, alert
         """
-        if self.min_iv[symbol].val and self.max_iv[symbol].val and self.max_iv[symbol].get_iv - self.min_iv[symbol].get_iv > 20:
-            send_telegram(str(symbol) + "abnormal change in IV")
+        if self.min_iv.get(symbol) and self.max_iv.get(symbol) and self.max_iv[symbol] - self.min_iv[symbol] > BASE_RANGE_THRESHOLD:
+            send_telegram(str(symbol) + " abnormal change in IV, IV range is at: " + str(self.max_iv[symbol] - self.min_iv[symbol] * 100) + "%")
 
 
     @staticmethod
@@ -53,6 +84,7 @@ class StockMonitor:
         if iv_result.iv > BASE_IV_THRESHOLD:
             #print("------------")
             send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(BASE_IV_THRESHOLD) + " at " + str(round(iv_result.iv, 2)))
+
 
     def monitor(self):
         """
@@ -71,25 +103,20 @@ class StockMonitor:
                 if composite_iv_result.status !="interpolated":
                     raise IVNotInterpolatedError(str(symbol) + " could not be interpolated")
 
+                #update database
+                self.database.update_stock(composite_iv_result)
+
                 #check base threshold
                 self.check_IV_threshold(composite_iv_result)
 
-                if not self.max_iv.get(symbol):
-                    self.max_iv[symbol] = MaxSlidingValue()
-                if not self.min_iv.get(symbol):
-                    self.min_iv[symbol] = MinSlidingValue()
-
-                #check IV range
+                #update and check IV range
+                self.update_IV_range(composite_iv_result)
                 self.check_IV_range(symbol)
 
-
-                iv = composite_iv_result.iv
-                self.max_iv[symbol].update_value(iv)
-                self.min_iv[symbol].update_value(iv)
-
+                self.database.connection.commit()
 
 
             except IVNotInterpolatedError as e:
                 print(e.message)
             #except Exception as e:
-             #   print("something happened for " + symbol + '\n' + str(e))
+                #print("something happened for " + symbol + '\n' + str(e))

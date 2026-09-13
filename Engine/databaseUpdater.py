@@ -24,6 +24,10 @@ class DatabaseUpdater:
         self.connection = sqlite3.connect(Path(DATABASE_NAME))
         self.connection.execute('PRAGMA foreign_keys = ON;')
 
+    def __delete__(self, instance):
+        self.connection.commit()
+        self.connection.close()
+
     def makeDatabase(self):
         """
         make the Stocks database
@@ -45,7 +49,7 @@ class DatabaseUpdater:
                        (
                            stock_symbol  TEXT,
                            iv_date  TEXT,
-                           compositeIV30 TEXT,
+                           compositeIV30 REAL,
                            PRIMARY KEY (stock_symbol, iv_date),
                            FOREIGN KEY (stock_symbol) REFERENCES stocks (stock_symbol)
 
@@ -58,12 +62,12 @@ class DatabaseUpdater:
                            stock_symbol  TEXT,
                            iv_date  TEXT,
                            iv_time          TEXT,
-                           compositeIV30 TEXT,
+                           compositeIV30 REAL,
                            PRIMARY KEY (stock_symbol, iv_date, iv_time),
                            FOREIGN KEY (stock_symbol) REFERENCES stocks (stock_symbol)
                        ) STRICT;
                        """)
-
+        self.connection.commit()
         cursor.close()
 
     def insertStock(self, composite_iv_result: CompositeIVResult):
@@ -76,6 +80,8 @@ class DatabaseUpdater:
             VALUES (:stock_symbol)
             ON CONFLICT (stock_symbol) DO NOTHING
         """, {'stock_symbol' : stock_symbol})
+
+        self.connection.commit()
         cursor.close()
 
     def insertDaily(self, composite_iv_result: CompositeIVResult):
@@ -89,10 +95,14 @@ class DatabaseUpdater:
 
         cursor = self.connection.execute("""
                                          INSERT INTO daily (stock_symbol, iv_date, iv_time, compositeIV30)
-                                         VALUES (:stock_symbol, :date, :time, :compositeIV30);
+                                         VALUES (:stock_symbol, :date, :time, :compositeIV30)
+                                            ON CONFLICT(stock_symbol, iv_date, iv_time)
+                                         DO UPDATE SET compositeIV30 = excluded.compositeIV30;
                                          """,
                                          {'stock_symbol': stock_symbol, 'date': date, 'time': time,
                                           'compositeIV30': compositeIV30})
+
+        self.connection.commit()
         cursor.close()
 
     def insertIntraday(self, composite_iv_result: CompositeIVResult):
@@ -112,6 +122,7 @@ class DatabaseUpdater:
                                          {'stock_symbol': stock_symbol, 'date': date,
                                           'compositeIV30': compositeIV30}
                                          )
+        self.connection.commit()
         cursor.close()
 
 
@@ -121,23 +132,27 @@ class DatabaseUpdater:
         if it is/no iv exist, return None
         """
         cursor = self.connection.execute("""
-            SELECT (compositeIV30, iv_date)
+            SELECT compositeIV30, iv_date
             FROM intraday
             WHERE stock_symbol = :stock_symbol
-            ORDER BY date DESC
+            ORDER BY iv_date DESC
             LIMIT 1;
         """, {'stock_symbol' : stock_symbol})
 
         potential_iv_time = cursor.fetchone()
-        if not potential_iv_time or potential_iv_time[1] < datetime.now() - timedelta(weeks = 1):
+        if not potential_iv_time or datetime.strptime(potential_iv_time[1], '%Y-%m-%d') < datetime.now() - timedelta(weeks = 1):
             return None
 
-        return potential_iv_time
+        return potential_iv_time[0]
 
     def update_stock(self, compositeIVResult : CompositeIVResult):
+        """
+        given compositeIVResult (including symbol, iv, and date),
+        add stock to stock table,
+        add to daily table,
+        and replace the intraday value with latest IV
+        """
         self.insertStock(compositeIVResult)
         self.insertDaily(compositeIVResult)
         self.insertIntraday(compositeIVResult)
 
-
-x = DatabaseUpdater()
