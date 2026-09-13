@@ -7,7 +7,7 @@ from API.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
 from API.telegramMessanger import send_telegram
 from Engine.databaseUpdater import DatabaseUpdater
 
-
+#TODO: each stock gets its OWN thresholds
 BASE_IV_THRESHOLD = .9  #When Composite IV exceeds value, alert (.9 = 90%)
 BASE_RANGE_THRESHOLD = 0.05 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
 OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
