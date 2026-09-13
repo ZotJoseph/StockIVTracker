@@ -11,6 +11,9 @@ from API.compositeIVFinder import load_symbols
 from Engine.stock_monitor import StockMonitor
 
 
+MINUTES_PER_MONITOR = 15
+
+
 monitor = StockMonitor()
 
 def start_monitoring():
@@ -21,9 +24,9 @@ def start_monitoring():
         now = datetime.now()
         if now >= next_update:
             print("process ran at " + str(now))
-            next_update = now + timedelta(minutes = 15)
+            next_update = now + timedelta(minutes = MINUTES_PER_MONITOR)
             monitor.monitor()
-        sleep(60)
+        sleep(55)
 
 if __name__ == '__main__':
     start_monitoring()
