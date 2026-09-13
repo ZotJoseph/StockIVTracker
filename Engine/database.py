@@ -15,7 +15,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from API.compositeIVFinder import CompositeIVResult
+from services.compositeIVFinder import CompositeIVResult
 
 DATABASE_NAME = "stocks.db"
 

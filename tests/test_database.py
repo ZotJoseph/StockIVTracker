@@ -1,9 +1,9 @@
 import unittest
 from datetime import datetime, timedelta
 
-import Engine.databaseUpdater
-from API.compositeIVFinder import CompositeIVResult
-from Engine.databaseUpdater import DatabaseUpdater
+import Engine.database
+from services.compositeIVFinder import CompositeIVResult
+from Engine.database import DatabaseUpdater
 
 
 Engine.databaseUpdater.DATABASE_NAME = "test_stocks.db"

@@ -1,14 +1,14 @@
 # This is a sample Python script.
 from time import sleep
 from datetime import datetime, timedelta
-from API import compositeIVFinder
-from API.compositeIVFinder import load_symbols
+from services import compositeIVFinder
+from services.compositeIVFinder import load_symbols
 
 
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
-from Engine.stock_monitor import StockMonitor
+from Engine.StockIVMonitor import StockMonitor
 
 
 MINUTES_PER_MONITOR = 15

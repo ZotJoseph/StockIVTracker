@@ -3,11 +3,11 @@ from datetime import timedelta, datetime
 from typing import Any, Generator
 
 import Engine
-from Engine.stock_monitor import StockMonitor
-from API.compositeIVFinder import SchwabIV, CompositeIVResult
+from Engine.StockIVMonitor import StockMonitor
+from services.compositeIVFinder import SchwabIV, CompositeIVResult
 from tests.test_database import wipe_db, make_fresh_db
 from unittest.mock import MagicMock
-import Engine.stock_monitor
+import Engine.StockIVMonitor
 
 
 Engine.databaseUpdater.DATABASE_NAME = "test_stocks.db"
@@ -16,7 +16,7 @@ Engine.stock_monitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
 
 def patch_fetch_composite_iv(mocker, iv_list: list[float]):
     """
-    patches API, mock a few returns
+    patches services, mock a few returns
     PLEASE REMEMBER TO UPDATE TO composite_iv_result = "interpolated" ELSE THE MONITOR WILL THROW EXCEPTION
 
     *iv is the list of iv that will be returned in CompositeIVResult, the top of the list will be outputted first
@@ -33,7 +33,7 @@ def patch_fetch_composite_iv(mocker, iv_list: list[float]):
 
 
     iv_results = composite_iv_result_generator()
-    mocker.patch("API.compositeIVFinder.SchwabIV.fetch_composite_iv", side_effect = iv_results)
+    mocker.patch("services.compositeIVFinder.SchwabIV.fetch_composite_iv", side_effect = iv_results)
 
 
 def patch_send_to_telegram(mocker) -> unittest.mock.MagicMock:
@@ -107,7 +107,7 @@ def test_iv_threshold(mocker):
     """
 
 
-    # SchwabIV, the class used to access API and find IV, is being mocked
+    # SchwabIV, the class used to access services and find IV, is being mocked
     patch_fetch_composite_iv(mocker, [.8999, .9])
 
     # wipe database

@@ -41,8 +41,8 @@ from schwab.client import Client
 
 load_dotenv()
 TOKEN_PATH = Path("token.json")
-SYMBOLS_PATH = Path("blob/optionSymbols.txt")
-OUTPUT_PATH = Path("blob/composite_iv.csv")
+SYMBOLS_PATH = Path("optionSymbols.txt")
+OUTPUT_PATH = Path("composite_iv.csv")
 
 TARGET_DTE = 30
 MIN_DTE = 7
@@ -255,7 +255,7 @@ def fetch_composite_iv(client: Client, symbol: str) -> CompositeIVResult:
     """
     THIS FUNCTION RETURNS THE ACTUAL RESULT + EVERYTHING YOU NEED
 
-    :param client: the dataclass used to store API related information
+    :param client: the dataclass used to store services related information
     :param symbol: the stock symbol you want to pass in
     :return: The CompositeIV as a dataclass
     """

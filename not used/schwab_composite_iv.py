@@ -258,7 +258,7 @@ def fetch_composite_iv(client: Client, symbol: str) -> CompositeIVResult:
     """
     THIS FUNCTION RETURNS THE ACTUAL RESULT + EVERYTHING YOU NEED
 
-    :param client: the dataclass used to store API related information
+    :param client: the dataclass used to store services related information
     :param symbol: the stock symbol you want to pass in
     :return: The CompositeIV as a dataclass
     """
