@@ -19,7 +19,7 @@ monitor = StockMonitor()
 def start_monitoring():
 
     next_update = datetime.now()
-
+    #TODO: dynamically control when to monitor: only when market is open, and reset everyday
     while True:
         now = datetime.now()
         if now >= next_update:
