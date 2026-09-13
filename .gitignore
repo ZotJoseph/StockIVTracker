@@ -5,3 +5,5 @@
 /not used
 stocks.db
 optionSymbols.txt
+__pycache__/
+*.pyc
