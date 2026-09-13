@@ -37,38 +37,9 @@ class DatabaseUpdater:
         daily: all polls of a day is kept here
         TODO: make a separate script that deletes old daily
         """
-        cursor = self.connection.execute("""
-                                         CREATE TABLE IF NOT EXISTS stocks
-                                         (
-                                             stock_symbol TEXT PRIMARY KEY NOT NULL
-                                         ) STRICT;
-                                         """)
-
-        cursor.execute("""
-                       CREATE TABLE IF NOT EXISTS intraday
-                       (
-                           stock_symbol  TEXT,
-                           iv_date  TEXT,
-                           compositeIV30 REAL,
-                           PRIMARY KEY (stock_symbol, iv_date),
-                           FOREIGN KEY (stock_symbol) REFERENCES stocks (stock_symbol)
-
-                       ) STRICT;
-                       """)
-
-        cursor.execute("""
-                       CREATE TABLE IF NOT EXISTS daily
-                       (
-                           stock_symbol  TEXT,
-                           iv_date  TEXT,
-                           iv_time          TEXT,
-                           compositeIV30 REAL,
-                           PRIMARY KEY (stock_symbol, iv_date, iv_time),
-                           FOREIGN KEY (stock_symbol) REFERENCES stocks (stock_symbol)
-                       ) STRICT;
-                       """)
+        with open("schema.sql") as f:
+            self.connection.executescript(f.read()) #executescript does NOT return a cursor, self.connection.close() ≠ cursor.close()...
         self.connection.commit()
-        cursor.close()
 
     def insertStock(self, composite_iv_result: CompositeIVResult):
         """
