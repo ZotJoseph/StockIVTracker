@@ -4,15 +4,15 @@ keeps track of all stock variables across multiple cron instances
 """
 from pathlib import Path
 from API.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
-from API.telegramMessager import send_telegram
+from API.telegramMessanger import send_telegram
 from Engine.databaseUpdater import DatabaseUpdater
 
 
-BASE_IV_THRESHOLD = .9
-BASE_RANGE_THRESHOLD = 0.05
-OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
+BASE_IV_THRESHOLD = .9  #When Composite IV exceeds value, alert (.9 = 90%)
+BASE_RANGE_THRESHOLD = 0.05 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
 OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
 
+#OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
 
 class IVNotInterpolatedError(Exception):
     """
@@ -71,8 +71,8 @@ class StockMonitor:
         """
         if IV's range exceeds a certain percent, alert
         """
-        if self.min_iv.get(symbol) and self.max_iv.get(symbol) and self.max_iv[symbol] - self.min_iv[symbol] > BASE_RANGE_THRESHOLD:
-            send_telegram(str(symbol) + " abnormal change in IV, IV range is at: " + str(self.max_iv[symbol] - self.min_iv[symbol] * 100) + "%")
+        if self.min_iv.get(symbol) and self.max_iv.get(symbol) and self.max_iv[symbol] - self.min_iv[symbol] >= BASE_RANGE_THRESHOLD:
+            send_telegram(str(symbol) + " abnormal change in IV, IV range is at: " + str((self.max_iv[symbol] - self.min_iv[symbol]) * 100) + "%")
 
 
     @staticmethod
@@ -81,7 +81,7 @@ class StockMonitor:
         if IV exceeds a certain base threshold during the day, alert
         TODO: make it adjustable for each individual stock
         """
-        if iv_result.iv > BASE_IV_THRESHOLD:
+        if iv_result.iv >= BASE_IV_THRESHOLD:
             #print("------------")
             send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(BASE_IV_THRESHOLD) + " at " + str(round(iv_result.iv, 2)))
 

@@ -6,7 +6,7 @@ import Engine
 from Engine.stock_monitor import StockMonitor
 from API.compositeIVFinder import SchwabIV, CompositeIVResult
 from tests.test_database import wipe_db, make_fresh_db
-
+from unittest.mock import MagicMock
 import Engine.stock_monitor
 
 
@@ -36,6 +36,19 @@ def patch_fetch_composite_iv(mocker, iv_list: list[float]):
     mocker.patch("API.compositeIVFinder.SchwabIV.fetch_composite_iv", side_effect = iv_results)
 
 
+def patch_send_to_telegram(mocker) -> unittest.mock.MagicMock:
+    """
+    patches send_telegram
+    does nothing
+    test uses mock.call_count to ascertain success
+    """
+
+    #need to patch stock_monitor's reference of the function
+    #stock_monitor has its own reference because it imported via "from ... import" instead of "import"
+    return mocker.patch("Engine.stock_monitor.send_telegram")
+
+
+
 def test_iv_updates(mocker):
     """
     simulate when program updates IV, closes, and restarts, it should pull said latest IV
@@ -43,6 +56,7 @@ def test_iv_updates(mocker):
     """
     # SchwabIV, the class used to access APi and find IV, is being mocked
     patch_fetch_composite_iv(mocker, [.1, .5])
+    patch_send_to_telegram(mocker)
 
     # wipe database
     monitor = StockMonitor()
@@ -61,6 +75,53 @@ def test_iv_updates(mocker):
     # restart monitor
     monitor = StockMonitor()
     assert monitor.min_iv["GOOGL"] == .5 and monitor.max_iv["GOOGL"] == .5
+
+
+def test_iv_range(mocker):
+    """
+    alerts when iv exceeds range, otherwise doesn't
+    """
+
+
+    # SchwabIV, the class used to access APi and find IV, is being mocked
+    patch_fetch_composite_iv(mocker, [.1, .14, .16])
+
+    # wipe database
+    monitor = StockMonitor()
+    wipe_db(monitor.database)
+
+    #telegram order: don't send the first two, send the last one
+    mock_telegram = patch_send_to_telegram(mocker)
+
+    monitor = StockMonitor()
+    monitor.monitor()
+    assert mock_telegram.call_count == 0
+    monitor.monitor()
+    assert mock_telegram.call_count == 0
+    monitor.monitor()
+    assert mock_telegram.call_count == 1
+
+def test_iv_threshold(mocker):
+    """
+    alerts when iv exceeds threshold, otherwise doesn't
+    """
+
+
+    # SchwabIV, the class used to access API and find IV, is being mocked
+    patch_fetch_composite_iv(mocker, [.8999, .9])
+
+    # wipe database
+    monitor = StockMonitor()
+    wipe_db(monitor.database)
+
+    #telegram order: don't send the first two, send the last one
+    mock_telegram = patch_send_to_telegram(mocker)
+
+    monitor = StockMonitor()
+    monitor.monitor()
+    assert mock_telegram.call_count == 0
+    monitor.monitor()
+    assert mock_telegram.call_count == 1
 
 
 if __name__ == '__main__':
