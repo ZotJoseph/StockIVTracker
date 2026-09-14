@@ -18,8 +18,8 @@ class StockConfig:
     threshold_alert_direction : str # "up" = when exceed threshold, alert, "down" = when go below threshold, None = not set yet (when first ran)
 
 
-UNIVERSAL_BASE_THRESHOLD = .9  #When Composite IV exceeds value, alert (.9 = 90%)
-UNIVERSAL_RANGE_THRESHOLD = 0.03 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
+BASE_IV_THRESHOLD = .9  #When Composite IV exceeds value, alert (.9 = 90%)
+BASE_RANGE_THRESHOLD = 0.05 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
 OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
 #OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
 
@@ -54,10 +54,10 @@ class StockMonitor:
         self.database.makeDatabase()
 
         for stock in self.symbols_list:
-            self.configurate_stock(stock)
+            self.initialize_iv_range(stock)
 
 
-    def configurate_stock(self, stock_symbol : str):
+    def initialize_iv_range(self, stock_symbol : str):
         """
         given a stock symbol, grab the latest IV value from database, if it does not exist, set both to None
         TODO: if data for today's stock exist, retrieve the smallest and largest value 30 day composite IV and set them to min/max respectively
@@ -80,7 +80,7 @@ class StockMonitor:
         """
         if IV's range exceeds a certain percent, alert
         """
-        if self.min_iv.get(symbol) and self.max_iv.get(symbol) and self.max_iv[symbol] - self.min_iv[symbol] >= UNIVERSAL_RANGE_THRESHOLD:
+        if self.min_iv.get(symbol) and self.max_iv.get(symbol) and self.max_iv[symbol] - self.min_iv[symbol] >= BASE_RANGE_THRESHOLD:
             send_telegram(str(symbol) + " abnormal change in IV, IV range is at: " + str((self.max_iv[symbol] - self.min_iv[symbol]) * 100) + "%")
 
 
@@ -90,9 +90,9 @@ class StockMonitor:
         if IV exceeds a certain base threshold during the day, alert
         TODO: make it adjustable for each individual stock
         """
-        if iv_result.iv >= UNIVERSAL_BASE_THRESHOLD:
+        if iv_result.iv >= BASE_IV_THRESHOLD:
             #print("------------")
-            send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(UNIVERSAL_BASE_THRESHOLD) + " at " + str(round(iv_result.iv, 2)))
+            send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(BASE_IV_THRESHOLD) + " at " + str(round(iv_result.iv, 2)))
 
 
     def monitor(self):
