@@ -1,11 +1,11 @@
 """
-Core engine of the stock monitor
+Core common of the stock monitor
 keeps track of all stock variables across multiple cron instances
 """
 from pathlib import Path
-from services.compositeIVFinder import load_symbols, SchwabIV, CompositeIVResult
-from services.telegramMessanger import send_telegram
-from engine.database import DatabaseUpdater
+from controller.composite_iv_finder import load_symbols, SchwabIV, CompositeIVResult
+from common.notifier import send_telegram
+from common.database import DatabaseUpdater
 
 #TODO: each stock gets its OWN thresholds
 
@@ -20,7 +20,7 @@ OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
 
 class IVNotInterpolatedError(Exception):
     """
-    custom error for when services or IVCalculator could not interpolate IV
+    custom error for when controller or IVCalculator could not interpolate IV
     usually when stock symbol does not exist
     """
     def __init__(self, message, error_code = None):

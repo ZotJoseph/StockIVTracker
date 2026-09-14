@@ -1,12 +1,12 @@
 import unittest
 from datetime import datetime, timedelta
 
-import engine.database
-from services.compositeIVFinder import CompositeIVResult
-from engine.database import DatabaseUpdater
+import common.database
+from controller.composite_iv_finder import CompositeIVResult
+from common.database import DatabaseUpdater
 
 
-engine.database.DATABASE_NAME = "test_stocks.db"
+common.database.DATABASE_NAME = "test_stocks.db"
 
 
 def make_fresh_db() -> DatabaseUpdater:

@@ -2,21 +2,21 @@ import unittest
 from datetime import timedelta, datetime
 from typing import Any, Generator
 
-import engine
-from engine.stockIVMonitor import StockMonitor
-from services.compositeIVFinder import SchwabIV, CompositeIVResult
-from tests.test_database import wipe_db, make_fresh_db
+import common
+from controller.stock_iv_monitor import StockMonitor
+from controller.composite_iv_finder import CompositeIVResult
+from tests.test_database import wipe_db
 from unittest.mock import MagicMock
-import engine.stockIVMonitor
+import controller.stock_iv_monitor
 
 
-engine.database.DATABASE_NAME = "test_stocks.db"
-engine.stockIVMonitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
+common.database.DATABASE_NAME = "test_stocks.db"
+controller.stock_iv_monitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
 
 
 def patch_fetch_composite_iv(mocker, iv_list: list[float]):
     """
-    patches services, mock a few returns
+    patches controller, mock a few returns
     PLEASE REMEMBER TO UPDATE TO composite_iv_result = "interpolated" ELSE THE MONITOR WILL THROW EXCEPTION
 
     *iv is the list of iv that will be returned in CompositeIVResult, the top of the list will be outputted first
@@ -33,7 +33,7 @@ def patch_fetch_composite_iv(mocker, iv_list: list[float]):
 
 
     iv_results = composite_iv_result_generator()
-    mocker.patch("services.compositeIVFinder.SchwabIV.fetch_composite_iv", side_effect = iv_results)
+    mocker.patch("controller.composite_iv_finder.SchwabIV.fetch_composite_iv", side_effect = iv_results)
 
 
 def patch_send_to_telegram(mocker) -> unittest.mock.MagicMock:
@@ -45,7 +45,7 @@ def patch_send_to_telegram(mocker) -> unittest.mock.MagicMock:
 
     #need to patch stock_monitor's reference of the function
     #stock_monitor has its own reference because it imported via "from ... import" instead of "import"
-    return mocker.patch("engine.stockIVMonitor.send_telegram")
+    return mocker.patch("controller.stock_iv_monitor.send_telegram")
 
 
 
@@ -107,7 +107,7 @@ def test_iv_threshold(mocker):
     """
 
 
-    # SchwabIV, the class used to access services and find IV, is being mocked
+    # SchwabIV, the class used to access controller and find IV, is being mocked
     patch_fetch_composite_iv(mocker, [.8999, .9])
 
     # wipe database
