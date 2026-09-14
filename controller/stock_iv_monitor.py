@@ -18,8 +18,7 @@ class StockConfig:
     threshold_alert_direction : str # "up" = when exceed threshold, alert, "down" = when go below threshold, None = not set yet (when first ran)
 
 
-BASE_IV_THRESHOLD = .9  #When Composite IV exceeds value, alert (.9 = 90%)
-BASE_RANGE_THRESHOLD = 0.05 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
+BASE_RANGE_THRESHOLD = 0.03 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
 OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
 #OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
 
@@ -54,10 +53,10 @@ class StockMonitor:
         self.database.makeDatabase()
 
         for stock in self.symbols_list:
-            self.initialize_iv_range(stock)
+            self.configurate_stock(stock)
 
 
-    def initialize_iv_range(self, stock_symbol : str):
+    def configurate_stock(self, stock_symbol : str):
         """
         given a stock symbol, grab the latest IV value from database, if it does not exist, set both to None
         TODO: if data for today's stock exist, retrieve the smallest and largest value 30 day composite IV and set them to min/max respectively
