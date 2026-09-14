@@ -55,7 +55,6 @@ def test_add_to_database():
     fictitious_stock = CompositeIVResult(symbol = "john_stocks", iv = .8,
                                          datetime = datetime.now())
 
-    database.insertStock(fictitious_stock)
     database.update_stock(fictitious_stock)
 
     test_iv = database.getLatestIVFromStock("john_stocks")

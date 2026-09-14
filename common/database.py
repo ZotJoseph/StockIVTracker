@@ -41,45 +41,11 @@ class DatabaseUpdater:
             self.connection.executescript(f.read()) #executescript does NOT return a cursor, self.connection.close() ≠ cursor.close()...
         self.connection.commit()
 
-    def insertStock(self, composite_iv_result: CompositeIVResult):
-        """
-        insert stock symbol into stock table for the first time
-        """
-        stock_symbol = composite_iv_result.symbol
-        cursor = self.connection.execute("""
-        INSERT INTO stocks (stock_symbol)
-            VALUES (:stock_symbol)
-            ON CONFLICT (stock_symbol) DO NOTHING
-        """, {'stock_symbol' : stock_symbol})
 
-        self.connection.commit()
-        cursor.close()
 
     def insertDaily(self, composite_iv_result: CompositeIVResult):
         """
-        inserts data from the composite_iv_result onto the daily table
-        """
-        stock_symbol = composite_iv_result.symbol
-        compositeIV30 = composite_iv_result.iv
-        date = str(composite_iv_result.datetime.date())
-        time = composite_iv_result.datetime.strftime('%H:%M')
-
-        cursor = self.connection.execute("""
-                                         INSERT INTO daily (stock_symbol, iv_date, iv_time, compositeIV30)
-                                         VALUES (:stock_symbol, :date, :time, :compositeIV30)
-                                            ON CONFLICT(stock_symbol, iv_date, iv_time)
-                                         DO UPDATE SET compositeIV30 = excluded.compositeIV30;
-                                         """,
-                                         {'stock_symbol': stock_symbol, 'date': date, 'time': time,
-                                          'compositeIV30': compositeIV30})
-
-        self.connection.commit()
-        cursor.close()
-
-    def insertIntraday(self, composite_iv_result: CompositeIVResult):
-        """
-        inserts data from composite_iv_result onto the intraday table
-
+        inserts data from composite_iv_result onto the daily table (one entry a day)
         """
         stock_symbol = composite_iv_result.symbol
         compositeIV30 = composite_iv_result.iv
@@ -123,7 +89,5 @@ class DatabaseUpdater:
         add to daily table,
         and replace the intraday value with latest IV
         """
-        self.insertStock(compositeIVResult)
         self.insertDaily(compositeIVResult)
-        self.insertIntraday(compositeIVResult)
 
