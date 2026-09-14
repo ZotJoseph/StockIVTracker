@@ -17,7 +17,7 @@ from pathlib import Path
 
 from controller.composite_iv_finder import CompositeIVResult
 
-DATABASE_NAME = "stocks.db"
+DATABASE_NAME = "common/stocks.db"
 
 class DatabaseUpdater:
     def __init__(self):
@@ -37,7 +37,7 @@ class DatabaseUpdater:
         daily: all polls of a day is kept here
         TODO: make a separate script that deletes old daily
         """
-        with open("schema.sql") as f:
+        with open("common/schema.sql") as f:
             self.connection.executescript(f.read()) #executescript does NOT return a cursor, self.connection.close() ≠ cursor.close()...
         self.connection.commit()
 
