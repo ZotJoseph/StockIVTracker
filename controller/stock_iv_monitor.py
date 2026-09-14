@@ -13,12 +13,13 @@ from common.database import DatabaseUpdater
 @dataclass
 class StockConfig:
     symbol : str
-    base_IV : float #  compare new results with base_IV to see if range exceeded, replace when it does
+    base_iv : float #  compare new results with base_IV to see if range exceeded, replace when it does
     threshold : float # used to check when stock goes above or below the threshold
-    threshold_alert_direction : str # "up" = when exceed threshold, alert, "down" = when go below threshold, None = not set yet (when first ran)
+    threshold_alert_direction : str | None # "up" = when exceed threshold, alert, "down" = when go below threshold, None = not set yet (when first ran)
 
 
-BASE_RANGE_THRESHOLD = 0.03 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
+UNIVERSAL_RANGE_THRESHOLD = 0.03 # 3 percent point change usually indicate IV crush
+
 OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
 #OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
 
@@ -39,59 +40,89 @@ class IVNotInterpolatedError(Exception):
 class StockMonitor:
     def __init__(self):
         """
-        symbols_list = symbols of all stocks we wish to monitor
-        min_iv = symbols : priority_queue, the top being the smallest IV of stock [key] in the last 24 hours
-        max_iv symbols : priority_queue, the top being the largest IV stock [key] in the last 24 hours
+        configurate stock and database
         """
-        self.symbols_list = load_symbols(Path(OPTION_SYMBOLS_PATH))
-        self.min_iv : dict[str, float] = {} #SlidingValue.get_value() returns a float
-        self.max_iv : dict[str, float] = {}
-
+        symbols_list = load_symbols(Path(OPTION_SYMBOLS_PATH))
+        self.stocks : list[StockConfig] = []
         self.iv_finder = SchwabIV()
+
 
         self.database = DatabaseUpdater()
         self.database.makeDatabase()
 
-        for stock in self.symbols_list:
+        for stock in symbols_list:
             self.configurate_stock(stock)
 
 
     def configurate_stock(self, stock_symbol : str):
         """
-        given a stock symbol, grab the latest IV value from database, if it does not exist, set both to None
-        TODO: if data for today's stock exist, retrieve the smallest and largest value 30 day composite IV and set them to min/max respectively
+        given a stock symbol, add a StockConfig for monitoring purposes
+        grabs the latest stock IV (if exist) for the symbol to set as base_iv and threshold
         """
-        stock_iv = self.database.getLatestIVFromStock(stock_symbol)
-        self.min_iv[stock_symbol], self.max_iv[stock_symbol] = stock_iv, stock_iv
-
-
-    def update_IV_range(self, composite_iv_result : CompositeIVResult):
-        """
-        given compositeIVResult, update existing IV range
-        """
-        symbol = composite_iv_result.symbol
-        if not self.min_iv.get(symbol) or self.min_iv[symbol] > composite_iv_result.iv:
-            self.min_iv[symbol] = composite_iv_result.iv
-        if not self.max_iv.get(symbol) or self.max_iv[symbol] < composite_iv_result.iv:
-            self.max_iv[symbol] = composite_iv_result.iv
-
-    def check_IV_range(self, symbol):
-        """
-        if IV's range exceeds a certain percent, alert
-        """
-        if self.min_iv.get(symbol) and self.max_iv.get(symbol) and self.max_iv[symbol] - self.min_iv[symbol] >= BASE_RANGE_THRESHOLD:
-            send_telegram(str(symbol) + " abnormal change in IV, IV range is at: " + str((self.max_iv[symbol] - self.min_iv[symbol]) * 100) + "%")
-
+        latest_stock_iv = self.database.getLatestIVFromStock(stock_symbol)
+        self.stocks.append(
+            StockConfig(
+                symbol = stock_symbol,
+                base_iv = latest_stock_iv,
+                threshold = latest_stock_iv,
+                threshold_alert_direction = None
+            )
+        )
 
     @staticmethod
-    def check_IV_threshold(iv_result : CompositeIVResult):
+    def check_and_update_iv_range(stock : StockConfig, updated_stock : CompositeIVResult) -> bool:
         """
-        if IV exceeds a certain base threshold during the day, alert
-        TODO: make it adjustable for each individual stock
+        returns whether last updated IV range exceeds the UNIVERSAL_RANGE_THRESHOLD
+        has the side effect of alerting telegram and updating base_iv of stock if it exceeds
         """
-        if iv_result.iv >= BASE_IV_THRESHOLD:
-            #print("------------")
-            send_telegram(str(iv_result.symbol) + " exceeds base threshold of " + str(BASE_IV_THRESHOLD) + " at " + str(round(iv_result.iv, 2)))
+
+        if not stock.symbol:
+            stock.base_iv = updated_stock.iv
+
+        if abs(updated_stock.iv - stock.base_iv) >= UNIVERSAL_RANGE_THRESHOLD:
+            send_telegram(str(stock.symbol) + " has abnormal change in composite 30 day IV from : "
+                          + str(round(stock.base_iv, 5) * 100) + "% to " + str(round(updated_stock.iv, 5) * 100) + "%")
+            stock.base_iv = updated_stock.iv
+            return True
+
+        return False
+
+    @staticmethod
+    def check_and_update_iv_threshold(stock : StockConfig, updated_stock : CompositeIVResult) -> bool:
+        """
+        returns whether last updated stock IV goes past the set throttle for said IV
+        has side effect of alerting telegram and updating threshold direction if threshold is hit
+        """
+
+        # no stock IV
+        if not stock.base_iv:
+            stock.base_iv = updated_stock.iv
+
+        # has stock IV but no direction
+        if not stock.threshold_alert_direction:
+            stock_delta = updated_stock.iv - stock.base_iv
+            if stock_delta > 0: # stock IV increased, so set throttle direction to down (alert when fall back down)
+                stock.threshold_alert_direction = "down"
+            if stock_delta < 0:
+                stock.threshold_alert_direction = "up"  # opposite way
+            else:
+                stock.threshold_alert_direction = None # also possible it didn't change, in which case still indecisive
+
+        if stock.threshold_alert_direction == "up" and updated_stock.iv > stock.threshold:
+            send_telegram(str(stock.symbol) + " went above the threshold of "
+                          + str(round(stock.threshold, 5) * 100) + "% at " + str(round(updated_stock.iv, 5) * 100) + "%")
+            stock.threshold_alert_direction = "down"
+            return True
+
+        if stock.threshold_alert_direction == "down" and updated_stock.iv < stock.threshold:
+            send_telegram(str(stock.symbol) + " went below the threshold of "
+                          + str(round(stock.threshold, 5) * 100) + "% at " + str(
+                round(updated_stock.iv, 5) * 100) + "%")
+            stock.threshold_alert_direction = "up"
+            return True
+
+        return False
+
 
 
     def monitor(self):
@@ -104,22 +135,21 @@ class StockMonitor:
         update IV in daily database
         """
 
-        for symbol in self.symbols_list:
+        for stock in self.stocks:
             try:
-                composite_iv_result = self.iv_finder.fetch_composite_iv(symbol)
+                composite_iv_result = self.iv_finder.fetch_composite_iv(stock.symbol)
                 print(str(composite_iv_result.symbol) + " " + str(composite_iv_result.iv))
                 if composite_iv_result.status !="interpolated":
-                    raise IVNotInterpolatedError(str(symbol) + " could not be interpolated")
+                    raise IVNotInterpolatedError(str(stock.symbol) + " could not be interpolated")
 
                 #update database
                 self.database.update_stock(composite_iv_result)
 
                 #check base threshold
-                self.check_IV_threshold(composite_iv_result)
+                self.check_and_update_iv_threshold(stock, composite_iv_result)
 
                 #update and check IV range
-                self.update_IV_range(composite_iv_result)
-                self.check_IV_range(symbol)
+                self.check_and_update_iv_range(stock, composite_iv_result)
 
 
             except IVNotInterpolatedError as e:
