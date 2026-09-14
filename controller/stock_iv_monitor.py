@@ -117,8 +117,6 @@ class StockMonitor:
                 self.update_IV_range(composite_iv_result)
                 self.check_IV_range(symbol)
 
-                self.database.connection.commit()
-
 
             except IVNotInterpolatedError as e:
                 print(e.message)
