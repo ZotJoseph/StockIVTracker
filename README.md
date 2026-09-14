@@ -19,5 +19,7 @@ Installation:
 
   ! visit https://api.telegram.org/bot{YOUR_BOT_TOKEN}/getUpdates to get chat ID
 
-3) in blob/optionSymbols.txt add the symbols of your preferred stock to monitor
-4) run, it's preferred that you don't stop the program when the market is open (useless when its' closed since no one can make calls/puts)
+3) grab Schwab Bearer tokens via OAuth 2.0, put the tokens.json inside project directory
+
+4) in optionSymbols.txt add the symbols of your preferred stock to monitor
+5) run, it's preferred that you don't stop the program when the market is open (useless when its' closed since no one can make calls/puts)

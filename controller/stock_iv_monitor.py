@@ -2,20 +2,25 @@
 Core common of the stock monitor
 keeps track of all stock variables across multiple cron instances
 """
+from dataclasses import dataclass
 from pathlib import Path
 from controller.composite_iv_finder import load_symbols, SchwabIV, CompositeIVResult
 from common.notifier import send_telegram
 from common.database import DatabaseUpdater
 
-#TODO: each stock gets its OWN thresholds
+
+
+@dataclass
+class StockConfig:
+    symbol : str
+    base_IV : float #  compare new results with base_IV to see if range exceeded, replace when it does
+    threshold : float # used to check when stock goes above or below the threshold
+    threshold_alert_direction : str # "up" = when exceed threshold, alert, "down" = when go below threshold, None = not set yet (when first ran)
 
 
 BASE_IV_THRESHOLD = .9  #When Composite IV exceeds value, alert (.9 = 90%)
-
-#TODO: range threshold (for that day) should dynamically increase when stock hits the threshold; give each stock their OWN threshold
 BASE_RANGE_THRESHOLD = 0.05 #When the range of a Composite IV exceeds value in a single day, alert  (.05 = 5%)
 OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
-
 #OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
 
 class IVNotInterpolatedError(Exception):
