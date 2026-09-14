@@ -14,7 +14,7 @@ common.database.DATABASE_NAME = "test_stocks.db"
 controller.stock_iv_monitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
 
 
-def patch_fetch_composite_iv(mocker, iv_list: list[float]):
+def mock_fetch_composite_iv(mocker, iv_list: list[float]):
     """
     patches controller, mock a few returns
     PLEASE REMEMBER TO UPDATE TO composite_iv_result = "interpolated" ELSE THE MONITOR WILL THROW EXCEPTION
@@ -36,7 +36,7 @@ def patch_fetch_composite_iv(mocker, iv_list: list[float]):
     mocker.patch("controller.composite_iv_finder.SchwabIV.fetch_composite_iv", side_effect = iv_results)
 
 
-def patch_send_to_telegram(mocker) -> unittest.mock.MagicMock:
+def mock_send_to_telegram(mocker) -> unittest.mock.MagicMock:
     """
     patches send_telegram
     does nothing
@@ -55,8 +55,8 @@ def test_iv_updates(mocker):
     :return:
     """
     # SchwabIV, the class used to access APi and find IV, is being mocked
-    patch_fetch_composite_iv(mocker, [.1, .5])
-    patch_send_to_telegram(mocker)
+    mock_fetch_composite_iv(mocker, [.1, .5])
+    mock_send_to_telegram(mocker)
 
     # wipe database
     monitor = StockMonitor()
@@ -84,14 +84,14 @@ def test_iv_range(mocker):
 
 
     # SchwabIV, the class used to access APi and find IV, is being mocked
-    patch_fetch_composite_iv(mocker, [.1, .14, .16])
+    mock_fetch_composite_iv(mocker, [.1, .14, .16])
 
     # wipe database
     monitor = StockMonitor()
     wipe_db(monitor.database)
 
     #telegram order: don't send the first two, send the last one
-    mock_telegram = patch_send_to_telegram(mocker)
+    mock_telegram = mock_send_to_telegram(mocker)
 
     monitor = StockMonitor()
     monitor.monitor()
@@ -108,21 +108,17 @@ def test_iv_threshold(mocker):
 
 
     # SchwabIV, the class used to access controller and find IV, is being mocked
-    patch_fetch_composite_iv(mocker, [.8999, .9])
+    mock_fetch_composite_iv(mocker, [.8999, .9])
 
     # wipe database
     monitor = StockMonitor()
     wipe_db(monitor.database)
 
     #telegram order: don't send the first two, send the last one
-    mock_telegram = patch_send_to_telegram(mocker)
+    mock_telegram = mock_send_to_telegram(mocker)
 
     monitor = StockMonitor()
     monitor.monitor()
     assert mock_telegram.call_count == 0
     monitor.monitor()
     assert mock_telegram.call_count == 1
-
-
-if __name__ == '__main__':
-    unittest.main()

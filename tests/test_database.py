@@ -123,5 +123,3 @@ def test_retrieve_latest_stock():
     test_iv = database.getLatestIVFromStock("john_stocks")
     assert test_iv == .4
 
-if __name__ == '__main__':
-    unittest.main()
