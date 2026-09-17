@@ -20,7 +20,7 @@ class StockConfig:
 
 UNIVERSAL_RANGE_THRESHOLD = 0.03 # 3 percent point change usually indicate IV crush
 
-OPTION_SYMBOLS_PATH = "blob/optionSymbols.txt"
+OPTION_SYMBOLS_PATH = "optionSymbols.txt"
 #OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
 
 class IVNotInterpolatedError(Exception):
@@ -107,6 +107,7 @@ class StockMonitor:
                 stock.threshold_alert_direction = "up"  # opposite way
             else:
                 stock.threshold_alert_direction = None # also possible it didn't change, in which case still indecisive
+                return False
 
         if stock.threshold_alert_direction == "up" and updated_stock.iv > stock.threshold:
             send_telegram(str(stock.symbol) + " went above the threshold of "
@@ -138,8 +139,10 @@ class StockMonitor:
         for stock in self.stocks:
             try:
                 composite_iv_result = self.iv_finder.fetch_composite_iv(stock.symbol)
+
                 print(str(composite_iv_result.symbol) + " " + str(composite_iv_result.iv))
-                if composite_iv_result.status !="interpolated":
+                print(str(stock))
+                if composite_iv_result.iv is None:
                     raise IVNotInterpolatedError(str(stock.symbol) + " could not be interpolated")
 
                 #update database

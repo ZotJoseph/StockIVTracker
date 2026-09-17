@@ -11,6 +11,7 @@ chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
 
 def send_telegram(string : str):
+    print("\n ---------------------------------------------------------- \n" + string)
     response = requests.post(
         f"https://api.telegram.org/bot{token}/sendMessage",
         data={
