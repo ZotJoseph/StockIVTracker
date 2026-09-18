@@ -15,9 +15,13 @@ def read_root():
 
 
 @app.get("/stocks/{symbol}")
-def read_stock_symbol(symbol: str) -> float:
+def read_stock(symbol: str, iv_date : datetime.date | None = None) -> float:
+    """returns stock iv at date, if date is None, returns the latest stock from the last 5 days if available"""
+
     database = common.database.DatabaseConnection()
-    return database.getLatestIVFromStock(symbol)
+    if iv_date is None:
+        return database.getLatestIVFromStock(symbol)
+    return database.getIVFromDate(symbol, iv_date)
 
 
 @app.put("/stocks/{symbol}")
@@ -29,10 +33,12 @@ def update_stock(symbol: str, iv : float, iv_date : datetime.date):
     return {
         "symbol": symbol,
         "composite_30_iv" : iv,
-        "date": datetime.date
+        "date": iv_date
     }
+
+
 #TODO: get stock at date
-#TODO: update stock at date
+
 
 #TODO: get all of a stock within 30 days
 
