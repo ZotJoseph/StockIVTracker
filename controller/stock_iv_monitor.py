@@ -97,10 +97,10 @@ class StockMonitor:
 
 
         # no stock IV
-        if not stock.base_iv:
-            stock.base_iv = updated_stock.iv
+        if not stock.threshold:
+            stock.threshold = updated_stock.iv
 
-        stock_iv_delta = updated_stock.iv - stock.base_iv   # show how much iv has changed (and in what direction)
+        stock_iv_delta = updated_stock.iv - stock.threshold   # show how much iv has changed (and in what direction)
 
         # has stock IV but no direction
         if not stock.threshold_alert_direction:
