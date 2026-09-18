@@ -74,7 +74,9 @@ class StockMonitor:
     def check_and_update_iv_range(stock : StockConfig, updated_stock : CompositeIVResult) -> bool:
         """
         returns whether last updated IV range exceeds the UNIVERSAL_RANGE_THRESHOLD
-        has the side effect of alerting telegram and updating base_iv of stock if it exceeds
+        has the side effect of alerting telegram and updating base_iv of stock if it exceeds;
+
+        does not update anything
         """
 
         if not stock.symbol:
@@ -102,23 +104,13 @@ class StockMonitor:
 
         stock_iv_delta = updated_stock.iv - stock.threshold   # show how much iv has changed (and in what direction)
 
-        # has stock IV but no direction
-        if not stock.threshold_alert_direction:
-            if stock_iv_delta > UNIVERSAL_BASE_THRESHOLD_RANGE: # stock IV increased, so set throttle direction to down (alert when fall back down)
-                stock.threshold_alert_direction = "down"
-            if stock_iv_delta < -UNIVERSAL_BASE_THRESHOLD_RANGE:
-                stock.threshold_alert_direction = "up"  # opposite way
-            else:
-                stock.threshold_alert_direction = None # also possible it didn't change, in which case still indecisive
-                return False
-
-        if stock.threshold_alert_direction == "up" and stock_iv_delta > UNIVERSAL_BASE_THRESHOLD_RANGE:  # stock IV went up
+        if (stock.threshold is None or stock.threshold_alert_direction == "up") and stock_iv_delta > UNIVERSAL_BASE_THRESHOLD_RANGE:  # stock IV went up
             send_telegram(str(stock.symbol) + " went above the threshold of "
                           + str(round(stock.threshold, 5) * 100) + "% at " + str(round(updated_stock.iv, 5) * 100) + "%")
             stock.threshold_alert_direction = "down"
             return True
 
-        if stock.threshold_alert_direction == "down" and stock_iv_delta < -UNIVERSAL_BASE_THRESHOLD_RANGE:
+        if (stock.threshold is None or stock.threshold_alert_direction == "down") and stock_iv_delta < -UNIVERSAL_BASE_THRESHOLD_RANGE:
             send_telegram(str(stock.symbol) + " went below the threshold of "
                           + str(round(stock.threshold, 5) * 100) + "% at " + str(round(updated_stock.iv, 5) * 100) + "%")
             stock.threshold_alert_direction = "up"
