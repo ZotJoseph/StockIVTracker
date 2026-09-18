@@ -43,7 +43,7 @@ class DatabaseConnection:
 
 
 
-    def insertDaily(self, stock_symbol : str, compositeIV30 : float, stock_iv_date : date):
+    def updateDaily(self, stock_symbol : str, compositeIV30 : float, stock_iv_date : date):
         """
         inserts data from composite_iv_result onto the daily table (one entry a day)
         """
@@ -85,6 +85,7 @@ class DatabaseConnection:
         given compositeIVResult (including symbol, iv, and date),
         add to daily stock
         """
-        self.insertDaily(stock_symbol = CompositeIVResult.symbol,
-                         compositeIV30 = CompositeIVResult.iv,
-                         stock_iv_date = CompositeIVResult.datetime.date())
+        self.updateDaily(stock_symbol = compositeIVResult.symbol,
+                         compositeIV30 = compositeIVResult.iv,
+                         stock_iv_date = compositeIVResult.datetime.date())
+
