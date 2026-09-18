@@ -94,11 +94,13 @@ class StockMonitor:
         returns whether last updated stock IV goes past the set throttle for said IV
         has side effect of alerting telegram and updating threshold direction if threshold is hit
         """
-        stock_iv_delta = updated_stock.iv - stock.base_iv   # show how much iv has changed (and in what direction)
+
 
         # no stock IV
         if not stock.base_iv:
             stock.base_iv = updated_stock.iv
+
+        stock_iv_delta = updated_stock.iv - stock.base_iv   # show how much iv has changed (and in what direction)
 
         # has stock IV but no direction
         if not stock.threshold_alert_direction:
@@ -136,7 +138,7 @@ class StockMonitor:
         update IV in daily database
         """
 
-        for symbol, stock in self.stocks:
+        for symbol, stock in self.stocks.items():
             try:
                 composite_iv_result = self.iv_finder.fetch_composite_iv(stock.symbol)
 
