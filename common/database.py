@@ -12,7 +12,7 @@ handles updating the database
 """
 
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from pathlib import Path
 
 from controller.composite_iv_finder import CompositeIVResult
@@ -43,20 +43,18 @@ class DatabaseConnection:
 
 
 
-    def insertDaily(self, composite_iv_result: CompositeIVResult):
+    def insertDaily(self, stock_symbol : str, compositeIV30 : float, stock_iv_date : date):
         """
         inserts data from composite_iv_result onto the daily table (one entry a day)
         """
-        stock_symbol = composite_iv_result.symbol
-        compositeIV30 = composite_iv_result.iv
-        date = str(composite_iv_result.datetime.date())
+
 
         cursor = self.connection.execute("""
                                          INSERT INTO intraday (stock_symbol, iv_date, compositeIV30)
                                          VALUES (:stock_symbol, :date, :compositeIV30)
                                          ON CONFLICT(stock_symbol, iv_date)
                                          DO UPDATE SET compositeIV30 = excluded.compositeIV30;""",
-                                         {'stock_symbol': stock_symbol, 'date': date,
+                                         {'stock_symbol': stock_symbol, 'date': stock_iv_date,
                                           'compositeIV30': compositeIV30}
                                          )
         self.connection.commit()
@@ -85,9 +83,8 @@ class DatabaseConnection:
     def update_stock(self, compositeIVResult : CompositeIVResult):
         """
         given compositeIVResult (including symbol, iv, and date),
-        add stock to stock table,
-        add to daily table,
-        and replace the intraday value with latest IV
+        add to daily stock
         """
-        self.insertDaily(compositeIVResult)
-
+        self.insertDaily(stock_symbol = CompositeIVResult.symbol,
+                         compositeIV30 = CompositeIVResult.iv,
+                         stock_iv_date = CompositeIVResult.datetime.date())
