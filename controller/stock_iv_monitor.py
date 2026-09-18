@@ -79,7 +79,7 @@ class StockMonitor:
         does not update anything
         """
 
-        if not stock.symbol:
+        if not stock.base_iv:
             stock.base_iv = updated_stock.iv
 
         if abs(updated_stock.iv - stock.base_iv) >= UNIVERSAL_RANGE_THRESHOLD:
