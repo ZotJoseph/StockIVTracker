@@ -3,20 +3,20 @@ from datetime import datetime, timedelta
 
 import common.database
 from controller.composite_iv_finder import CompositeIVResult
-from common.database import DatabaseUpdater
+from common.database import DatabaseConnection
 
 
 common.database.DATABASE_NAME = "test_stocks.db"
 
 
-def make_fresh_db() -> DatabaseUpdater:
-    database = DatabaseUpdater()
+def make_fresh_db() -> DatabaseConnection:
+    database = DatabaseConnection()
     wipe_db(database)
     database.makeDatabase()
     return database
 
 
-def wipe_db(database: DatabaseUpdater):
+def wipe_db(database: DatabaseConnection):
     cursor = database.connection.execute("""
                                          SELECT name
                                          FROM sqlite_master

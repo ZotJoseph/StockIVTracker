@@ -14,6 +14,6 @@ def read_root():
 
 @app.get("/stocks")
 def read_stock_symbol(symbol: str) -> float:
-    database = common.database.DatabaseUpdater()
+    database = common.database.DatabaseConnection()
     return database.getLatestIVFromStock(symbol)
 

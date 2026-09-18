@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from controller.composite_iv_finder import load_symbols, SchwabIV, CompositeIVResult
 from common.notifier import send_telegram
-from common.database import DatabaseUpdater
+from common.database import DatabaseConnection
 
 
 
@@ -47,7 +47,7 @@ class StockMonitor:
         self.iv_finder = SchwabIV()
 
 
-        self.database = DatabaseUpdater()
+        self.database = DatabaseConnection()
         self.database.makeDatabase()
 
         for stock in symbols_list:
