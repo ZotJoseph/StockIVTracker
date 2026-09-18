@@ -104,13 +104,13 @@ class StockMonitor:
 
         stock_iv_delta = updated_stock.iv - stock.threshold   # show how much iv has changed (and in what direction)
 
-        if (stock.threshold is None or stock.threshold_alert_direction == "up") and stock_iv_delta > UNIVERSAL_BASE_THRESHOLD_RANGE:  # stock IV went up
+        if (stock.threshold_alert_direction is None or stock.threshold_alert_direction == "up") and stock_iv_delta > UNIVERSAL_BASE_THRESHOLD_RANGE:  # stock IV went up
             send_telegram(str(stock.symbol) + " went above the threshold of "
                           + str(round(stock.threshold, 5) * 100) + "% at " + str(round(updated_stock.iv, 5) * 100) + "%")
             stock.threshold_alert_direction = "down"
             return True
 
-        if (stock.threshold is None or stock.threshold_alert_direction == "down") and stock_iv_delta < -UNIVERSAL_BASE_THRESHOLD_RANGE:
+        if (stock.threshold_alert_direction is None or stock.threshold_alert_direction == "down") and stock_iv_delta < -UNIVERSAL_BASE_THRESHOLD_RANGE:
             send_telegram(str(stock.symbol) + " went below the threshold of "
                           + str(round(stock.threshold, 5) * 100) + "% at " + str(round(updated_stock.iv, 5) * 100) + "%")
             stock.threshold_alert_direction = "up"
