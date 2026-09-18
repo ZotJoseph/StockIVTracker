@@ -94,6 +94,7 @@ class StockMonitor:
         returns whether last updated stock IV goes past the set throttle for said IV
         has side effect of alerting telegram and updating threshold direction if threshold is hit
         """
+        stock_iv_delta = updated_stock.iv - stock.base_iv   # show how much iv has changed (and in what direction)
 
         # no stock IV
         if not stock.base_iv:
@@ -101,25 +102,23 @@ class StockMonitor:
 
         # has stock IV but no direction
         if not stock.threshold_alert_direction:
-            stock_delta = updated_stock.iv - stock.base_iv
-            if stock_delta > 0: # stock IV increased, so set throttle direction to down (alert when fall back down)
+            if stock_iv_delta > UNIVERSAL_BASE_THRESHOLD_RANGE: # stock IV increased, so set throttle direction to down (alert when fall back down)
                 stock.threshold_alert_direction = "down"
-            if stock_delta < 0:
+            if stock_iv_delta < -UNIVERSAL_BASE_THRESHOLD_RANGE:
                 stock.threshold_alert_direction = "up"  # opposite way
             else:
                 stock.threshold_alert_direction = None # also possible it didn't change, in which case still indecisive
                 return False
 
-        if stock.threshold_alert_direction == "up" and updated_stock.iv > stock.threshold:
+        if stock.threshold_alert_direction == "up" and stock_iv_delta > UNIVERSAL_BASE_THRESHOLD_RANGE:  # stock IV went up
             send_telegram(str(stock.symbol) + " went above the threshold of "
                           + str(round(stock.threshold, 5) * 100) + "% at " + str(round(updated_stock.iv, 5) * 100) + "%")
             stock.threshold_alert_direction = "down"
             return True
 
-        if stock.threshold_alert_direction == "down" and updated_stock.iv < stock.threshold:
+        if stock.threshold_alert_direction == "down" and stock_iv_delta < -UNIVERSAL_BASE_THRESHOLD_RANGE:
             send_telegram(str(stock.symbol) + " went below the threshold of "
-                          + str(round(stock.threshold, 5) * 100) + "% at " + str(
-                round(updated_stock.iv, 5) * 100) + "%")
+                          + str(round(stock.threshold, 5) * 100) + "% at " + str(round(updated_stock.iv, 5) * 100) + "%")
             stock.threshold_alert_direction = "up"
             return True
 
