@@ -20,6 +20,7 @@ from controller.composite_iv_finder import CompositeIVResult
 DATABASE_NAME = "common/stocks.db"
 
 class DatabaseUpdater:
+    """TODO: change the name DatabaseUpdater to Database"""
     def __init__(self):
         self.connection = sqlite3.connect(Path(DATABASE_NAME))
         self.connection.execute('PRAGMA foreign_keys = ON;')
