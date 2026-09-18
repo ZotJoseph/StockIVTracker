@@ -6,7 +6,7 @@ from controller.composite_iv_finder import CompositeIVResult
 from common.database import DatabaseConnection
 
 
-common.database.DATABASE_NAME = "test_stocks.db"
+common.database.DATABASE_NAME = ":memory:"
 
 
 def make_fresh_db() -> DatabaseConnection:

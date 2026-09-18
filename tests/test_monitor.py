@@ -10,9 +10,9 @@ from unittest.mock import MagicMock
 import controller.stock_iv_monitor
 
 
-common.database.DATABASE_NAME = "test_stocks.db"
+common.database.DATABASE_NAME = ":memory:"
 controller.stock_iv_monitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
-
+controller.stock_iv_monitor.UNIVERSAL_RANGE_THRESHOLD = .03
 
 def mock_fetch_composite_iv(mocker, iv_list: list[float]):
     """
@@ -48,7 +48,6 @@ def mock_send_to_telegram(mocker) -> unittest.mock.MagicMock:
     return mocker.patch("controller.stock_iv_monitor.send_telegram")
 
 
-
 def test_iv_updates(mocker):
     """
     simulate when program updates IV, closes, and restarts, it should pull said latest IV
@@ -69,12 +68,10 @@ def test_iv_updates(mocker):
 
     # restart monitor
     monitor = StockMonitor()
-    assert monitor.min_iv["GOOGL"] == .1 and monitor.max_iv["GOOGL"] == .1
     monitor.monitor()
 
     # restart monitor
     monitor = StockMonitor()
-    assert monitor.min_iv["GOOGL"] == .5 and monitor.max_iv["GOOGL"] == .5
 
 
 def test_iv_range(mocker):

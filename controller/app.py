@@ -37,7 +37,6 @@ def update_stock(symbol: str, iv : float, iv_date : datetime.date):
     }
 
 
-#TODO: get stock at date
 
 
 #TODO: get all of a stock within 30 days
