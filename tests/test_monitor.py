@@ -16,6 +16,12 @@ controller.stock_iv_monitor.UNIVERSAL_RANGE_THRESHOLD = .03
 controller.stock_iv_monitor.UNIVERSAL_BASE_THRESHOLD_RANGE = .005
 
 
+def mock_schwab_init(mocker):
+    """
+    prevent credential-related failures during test
+    """
+    mocker.patch("controller.composite_iv_finder.SchwabIV.__init__", return_value = None)
+
 def mock_fetch_composite_iv(mocker, iv_list: list[float]):
     """
     patches controller, mock a few returns
@@ -57,6 +63,7 @@ def test_iv_updates(mocker):
     :return:
     """
     # SchwabIV, the class used to access APi and find IV, is being mocked
+    mock_schwab_init(mocker)
     mock_fetch_composite_iv(mocker, [.1, .5])
     mock_send_to_telegram(mocker)
 
@@ -85,6 +92,7 @@ def test_iv_range(mocker):
     """
 
     # SchwabIV, the class used to access APi and find IV, is being mocked
+    mock_schwab_init(mocker)
     mock_fetch_composite_iv(mocker, [.52, .53, .50])
     Schwab_api = SchwabIV()
     mock_send_to_telegram(mocker)
@@ -109,6 +117,7 @@ def test_iv_threshold(mocker):
     """
 
     # SchwabIV, the class used to access controller and find IV, is being mocked
+    mock_schwab_init(mocker)
     mock_fetch_composite_iv(mocker, [.5, .501, .506, .499, .49])
     Schwab_api = SchwabIV()
     mock_send_to_telegram(mocker)
