@@ -80,6 +80,25 @@ class DatabaseConnection:
 
         return potential_iv_time[0]
 
+
+    def getIVFromDate(self, stock_symbol : str, stock_iv_date : date):
+        """
+        returns iv of stock at that date, otherwise None
+        """
+
+        cursor = self.connection.execute("""
+                                         SELECT compositeIV30, iv_date
+                                         FROM intraday
+                                         WHERE stock_symbol = :stock_symbol 
+                                           AND iv_date = :iv_date;
+                                         """, {'stock_symbol': stock_symbol, 'iv_date' : stock_iv_date})
+
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return row[0]
+
+
     def update_stock(self, compositeIVResult : CompositeIVResult):
         """
         given compositeIVResult (including symbol, iv, and date),
