@@ -44,7 +44,7 @@ class StockMonitor:
         configurate stock and database
         """
         symbols_list = load_symbols(Path(OPTION_SYMBOLS_PATH))
-        self.stocks : list[StockConfig] = []
+        self.stocks : dict[str, StockConfig] = {}
         self.iv_finder = SchwabIV()
 
 
@@ -61,7 +61,7 @@ class StockMonitor:
         grabs the latest stock IV (if exist) for the symbol to set as base_iv and threshold
         """
         latest_stock_iv = self.database.getLatestIVFromStock(stock_symbol)
-        self.stocks.append(
+        self.stocks[stock_symbol] = (
             StockConfig(
                 symbol = stock_symbol,
                 base_iv = latest_stock_iv,
@@ -136,7 +136,7 @@ class StockMonitor:
         update IV in daily database
         """
 
-        for stock in self.stocks:
+        for symbol, stock in self.stocks:
             try:
                 composite_iv_result = self.iv_finder.fetch_composite_iv(stock.symbol)
 
