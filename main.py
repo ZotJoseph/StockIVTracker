@@ -23,7 +23,7 @@ if __name__ == '__main__':
         daemon_thread.start()
         server_thread.start()
 
-
+        # if no .join() main just exits instantly
         daemon_thread.join()
         server_thread.join()
 
