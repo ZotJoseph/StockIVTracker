@@ -2,7 +2,7 @@ import exchange_calendars as xcals
 from datetime import datetime, time
 from apscheduler.schedulers.blocking import BlockingScheduler
 from zoneinfo import ZoneInfo
-from stock_iv_monitor import StockMonitor
+from controller.stock_iv_monitor import StockMonitor
 
 eastern = ZoneInfo("America/New_York")
 scheduler = BlockingScheduler()

@@ -1,16 +1,30 @@
-# This is a sample Python script.
-from time import sleep
-from datetime import datetime, timedelta
+import threading
+import uvicorn
 
 from controller.scheduler import start_daemon
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from controller.app import app
 
-from controller.stock_iv_monitor import StockMonitor
 
-import controller.scheduler
-
+def run_server():
+    uvicorn.run(app, host = "0.0.0.0", port = 8000)
 
 if __name__ == '__main__':
-    start_daemon()
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+        daemon_thread = threading.Thread(
+            target = start_daemon,
+            daemon = True
+        )
+
+        server_thread = threading.Thread(
+            target = run_server,
+            daemon = True
+        )
+
+        daemon_thread.start()
+        server_thread.start()
+
+
+        daemon_thread.join()
+        server_thread.join()
+
+
