@@ -1,9 +1,10 @@
 import datetime
+from dataclasses import dataclass
 
 from click import DateTime
 from fastapi import FastAPI
 
-import common.database
+from common.database import DatabaseConnection, StockIV
 
 
 app = FastAPI()
@@ -13,31 +14,26 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
-
 @app.get("/stocks/{symbol}")
-def read_stock(symbol: str, iv_date : datetime.date | None = None) -> float:
-    """returns stock iv at date, if date is None, returns the latest stock from the last 5 days if available"""
+def read_stock(symbol: str, iv_date : datetime.date = datetime.date.today()) -> StockIV:
+    """returns stock iv at date, date default to current day"""
 
-    database = common.database.DatabaseConnection()
-    if iv_date is None:
-        return database.getLatestIVFromStock(symbol)
-    return database.getIVFromDate(symbol, iv_date)
+    database = DatabaseConnection()
+    return StockIV(symbol, database.getIVFromDate(symbol, iv_date), iv_date)
 
 
 @app.put("/stocks/{symbol}")
 def update_stock(symbol: str, iv : float, iv_date : datetime.date):
-
-    database = common.database.DatabaseConnection()
+    """updates stock iv of symbol at date"""
+    database = DatabaseConnection()
     database.updateDaily(symbol, iv, iv_date)
-
-    return {
-        "symbol": symbol,
-        "composite_30_iv" : iv,
-        "date": iv_date
-    }
+    return StockIV(symbol, iv, iv_date)
 
 
+@app.get("/stocks/fetch30day/{symbol}")
+def read_stock_30_days(symbol: str) -> list[StockIV]:
+    """returns stock composite 30 day iv of past 30 days"""
+    database = DatabaseConnection()
+    return database.getIVOfPast30Days(symbol)
 
-
-#TODO: get all of a stock within 30 days
 

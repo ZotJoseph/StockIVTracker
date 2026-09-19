@@ -12,10 +12,19 @@ handles updating the database
 """
 
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timedelta, date
 from pathlib import Path
-
 from controller.composite_iv_finder import CompositeIVResult
+
+
+@dataclass
+class StockIV:
+    """only used for FastAPI endpoint"""
+    symbol : str
+    composite_30_day_iv : float
+    date : date
+
 
 DATABASE_NAME = "common/stocks.db"
 
@@ -80,6 +89,21 @@ class DatabaseConnection:
 
         return potential_iv_time[0]
 
+    def getIVOfPast30Days(self, stock_symbol : str) -> list[StockIV]:
+        """
+        get last 30 days worth of stock iv
+        """
+        res = []
+        cursor = self.connection.execute("""
+                                         SELECT stock_symbol, compositeIV30, iv_date
+                                         FROM intraday
+                                         WHERE stock_symbol = :stock_symbol 
+                                           AND iv_date < :30_days_ago;
+                                         """, {'stock_symbol': stock_symbol, '30_days_ago' : date.today()})
+        for row in cursor:
+            res.append(StockIV(row[0], row[1], datetime.strptime(row[2], "%Y-%m-%d").date()))
+        cursor.close()
+        return res
 
     def getIVFromDate(self, stock_symbol : str, stock_iv_date : date):
         """
