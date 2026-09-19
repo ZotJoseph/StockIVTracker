@@ -1,6 +1,7 @@
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
+APScheduler==3.11.3
 Authlib==1.8.0
 autopep8==2.3.2
 blinker==1.9.0
@@ -53,10 +54,9 @@ toolz==1.1.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2026.4
+tzlocal==5.4.4
 urllib3==2.7.0
 uv==0.12.16
 uvicorn==0.53.0
 websockets==17.1
 Werkzeug==3.1.8
-
-apscheduler

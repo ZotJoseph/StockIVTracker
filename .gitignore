@@ -8,3 +8,5 @@ optionSymbols.txt
 __pycache__/
 *.pyc
 .idea
+test.py
+/logs
