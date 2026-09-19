@@ -1,8 +1,12 @@
+import logging
+
 import exchange_calendars as xcals
 from datetime import datetime, time
 from apscheduler.schedulers.blocking import BlockingScheduler
 from zoneinfo import ZoneInfo
 from controller.stock_iv_monitor import StockMonitor
+
+logger = logging.getLogger(__name__)
 
 eastern = ZoneInfo("America/New_York")
 scheduler = BlockingScheduler()
@@ -23,6 +27,7 @@ def start_daemon():
 def checkDay():
     nyse = xcals.get_calendar("NYSE")
     if nyse.is_session(datetime.now(eastern).date()):
+        logging.info("market day detected")
         runMarketDay()
     return
 
@@ -37,4 +42,3 @@ def runMarketDay():
         end_date=datetime.combine(datetime.now(eastern).date(), time(16,0), tzinfo = eastern),
         id = "market_poll"
     )
-

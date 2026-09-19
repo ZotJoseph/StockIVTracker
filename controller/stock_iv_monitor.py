@@ -8,7 +8,8 @@ from controller.composite_iv_finder import load_symbols, SchwabIV, CompositeIVRe
 from common.notifier import send_telegram
 from common.database import DatabaseConnection
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 @dataclass
 class StockConfig:
@@ -43,6 +44,9 @@ class StockMonitor:
         """
         configurate stock and database
         """
+
+        logger.info("Monitor reset/new Monitor created")
+
         symbols_list = load_symbols(Path(OPTION_SYMBOLS_PATH))
         self.stocks : dict[str, StockConfig] = {}
         self.iv_finder = SchwabIV()
@@ -129,7 +133,7 @@ class StockMonitor:
         update min/max IV
         update IV in daily database
         """
-
+        logger.info("Monitor ran")
         for symbol, stock in self.stocks.items():
             try:
                 composite_iv_result = self.iv_finder.fetch_composite_iv(stock.symbol)
@@ -150,6 +154,6 @@ class StockMonitor:
 
 
             except IVNotInterpolatedError as e:
-                print(e.message)
+                logging.warning("failed to interpolate stock: " + str(e))
             #except Exception as e:
                 #print("something happened for " + symbol + '\n' + str(e))
