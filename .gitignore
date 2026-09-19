@@ -1,0 +1,13 @@
+/.env
+/tokens.json
+/test_stocks.db
+/Backend/stocks.db
+/not used
+stocks.db
+optionSymbols.txt
+__pycache__/
+*.pyc
+.idea
+test.py
+/logs
+.DS_Store
