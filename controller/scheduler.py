@@ -37,6 +37,4 @@ def runMarketDay():
         end_date=datetime.combine(datetime.now(eastern).date(), time(16,0), tzinfo = eastern),
         id = "market_poll"
     )
-    scheduler.start()
-
 
