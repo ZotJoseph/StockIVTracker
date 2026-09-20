@@ -23,7 +23,7 @@ UNIVERSAL_RANGE_THRESHOLD = 0.03 # 3 percent point change usually indicate IV cr
 UNIVERSAL_BASE_THRESHOLD_RANGE = 0.005 # base_threshold has a range where if change didn't exceed this number, the threshold will not trigger (otherwise it triggers too often)
 
 OPTION_SYMBOLS_PATH = "optionSymbols.txt"
-#OPTIONS_SYMBOLS_PATH_DEBUG = "blob/testSymbols.txt"
+#OPTIONS_SYMBOLS_PATH_DEBUG = "blob/test_symbols.txt"
 
 class IVNotInterpolatedError(Exception):
     """
