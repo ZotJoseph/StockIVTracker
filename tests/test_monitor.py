@@ -11,7 +11,7 @@ import controller.stock_iv_monitor
 
 
 common.database.DATABASE_NAME = "test_stocks.db"
-controller.stock_iv_monitor.OPTION_SYMBOLS_PATH = "tests/testSymbols.txt"
+controller.stock_iv_monitor.OPTION_SYMBOLS_PATH = "tests/test_symbols.txt"
 controller.stock_iv_monitor.UNIVERSAL_RANGE_THRESHOLD = .03
 controller.stock_iv_monitor.UNIVERSAL_BASE_THRESHOLD_RANGE = .005
 
